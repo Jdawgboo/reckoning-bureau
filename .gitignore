@@ -1,0 +1,19 @@
+# Dependencies and build output — reinstall and rebuild instead of committing.
+node_modules/
+agent-dev-client/build/
+agent-dev-server/build/
+agent-dev-server/dist/
+
+# Runtime environment: the platform injects model credentials here. Never commit it.
+.env
+.env.*
+!.env.example
+
+# Local noise
+*.log
+logs/
+.DS_Store
+.bun/
+.planwork/
+.idea/
+.vscode/

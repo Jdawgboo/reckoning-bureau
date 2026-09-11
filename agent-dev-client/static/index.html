@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f9f8f6" />
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Agentplace" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@100;200;300;400;500;600;700;800;900"
+      media="all"
+    />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+    <!-- The Bureau's typeface family: Plex Serif for headings, Plex Sans for
+         body, Plex Mono for the procedural chrome (stamps, lane numbers). -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>The Reckoning Bureau</title>
+    <link rel="stylesheet" href="/main.css?v=8" />
+
+    <!-- Development tools, DO NOT REMOVE -->
+    <script src="/sprintf.min.js"></script>
+    <script src="/livereload.js"></script>
+    <script src="/overlay.js"></script>
+    <script src="/server-status-overlay.js"></script>
+    <style>
+      /* Mobile Safari paints the top safe area / overscroll from the document
+         canvas, and iOS 26 Liquid Glass tints the status bar by sampling
+         fixed elements at the viewport edge (#edge-tint below). Both follow
+         the theme token, so a light/dark class flip retints the browser
+         chrome live. Inline on purpose: sampled at first paint, before
+         main.css applies. */
+      /* Safari paints the top safe area / overscroll from the html canvas;
+         the bottom toolbar glass reflects the LIVE page beneath it — so the
+         body stays transparent on mobile Safari (an opaque body or a bottom
+         sampling strip forces a static tint that never matches the dock
+         gradient). Same split as the landing site. */
+      html,
+      body {
+        background-color: hsl(var(--background, 40 20% 97%));
+      }
+      @supports (-webkit-touch-callout: none) {
+        @media (max-width: 991px) {
+          body {
+            background-color: transparent;
+          }
+        }
+      }
+      @supports not (-webkit-touch-callout: none) {
+        #edge-tint {
+          display: none !important;
+        }
+      }
+      @media (min-width: 992px) {
+        #edge-tint {
+          display: none !important;
+        }
+      }
+      #root > .loading-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      #root > .loading-container > .loading-spinner {
+        width: 64px;
+        height: 64px;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="edge-tint"
+      aria-hidden="true"
+      style="position:fixed;top:0;left:0;width:100%;height:4px;background-color:hsl(var(--background,40 20% 97%));pointer-events:none;z-index:60"
+    ></div>
+    <div id="root">
+      <div class="loading-container">
+        <svg class="loading-spinner" viewBox="0 0 64 64" fill="none">
+          <title>Loading...</title>
+          <circle
+            cx="32"
+            cy="32"
+            r="30"
+            stroke="url(#circularLoaderGradient)"
+            stroke-width="1"
+            stroke-linecap="round"
+            stroke-dasharray="50 150"
+          />
+          <defs>
+            <linearGradient id="circularLoaderGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#6b7280" stop-opacity="0.2" />
+              <stop offset="50%" stop-color="#6b7280" stop-opacity="1" />
+              <stop offset="100%" stop-color="#6b7280" stop-opacity="0.2" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <p id="boot-brand" style="max-width: 44ch; text-align: center; font-size: 13px; color: #8a8377; font-family: sans-serif; line-height: 1.5;"></p>
+        <script>
+          document.getElementById('boot-brand').textContent = document.title;
+        </script>
+      </div>
+    </div>
+    <script src="/main.js?v=8"></script>
+    <script>
+      // On-device chrome diagnostics: open with ?chrome-debug=1 and screenshot.
+      if (location.search.includes('chrome-debug')) {
+        const panel = document.createElement('pre');
+        panel.style.cssText =
+          'position:fixed;top:15%;left:8px;right:8px;z-index:9999;background:#000c;color:#0f0;' +
+          'font:11px monospace;padding:8px;border-radius:8px;pointer-events:none;white-space:pre-wrap';
+        document.body.appendChild(panel);
+        const probe = document.createElement('div');
+        probe.style.cssText = 'position:fixed;bottom:0;height:0;padding-bottom:env(safe-area-inset-bottom)';
+        document.body.appendChild(probe);
+        const report = () => {
+          const cs = getComputedStyle(document.documentElement);
+          const strips = ['edge-tint', 'edge-tint-bottom'].map((id) => {
+            const el = document.getElementById(id);
+            if (!el) return id + ': MISSING';
+            const s = getComputedStyle(el);
+            const r = el.getBoundingClientRect();
+            return id + ': display=' + s.display + ' bg=' + s.backgroundColor +
+              ' rect=' + Math.round(r.top) + '/' + Math.round(r.bottom) + ' h=' + Math.round(r.height);
+          });
+          panel.textContent = [
+            'innerH=' + window.innerHeight + ' outerH=' + window.outerHeight +
+              ' vv=' + Math.round(window.visualViewport ? window.visualViewport.height : -1),
+            'docElH=' + document.documentElement.clientHeight + ' bodyH=' + document.body.scrollHeight +
+              ' scrollY=' + Math.round(window.scrollY),
+            'sai-bottom=' + getComputedStyle(probe).paddingBottom,
+            'html bg=' + cs.backgroundColor + ' scheme=' + cs.colorScheme,
+            'body bg=' + getComputedStyle(document.body).backgroundColor,
+            'meta theme-color=' + (document.querySelector('meta[name="theme-color"]')?.content ?? 'none'),
+            ...strips,
+          ].join('\n');
+        };
+        report();
+        setInterval(report, 1000);
+      }
+    </script>
+  </body>
+</html>

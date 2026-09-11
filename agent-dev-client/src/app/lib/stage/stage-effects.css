@@ -1,0 +1,226 @@
+/**
+ * Stage effects — ONLY the animated gradient/pseudo-element effects that
+ * Tailwind utilities cannot express (mouse-follow spotlight, conic
+ * border-spin, page sweep, sheen/shimmer/progress tracks) plus the `.stage-md`
+ * markdown element styles. Everything else on the stage is Tailwind utilities
+ * on the shared theme tokens; element-level animations (fadeUp, word-in,
+ * pop-in) live in tailwind.config.cjs. These effects READ the theme tokens
+ * too, so a theme rewrite restyles them — no palette lives here, only motion
+ * geometry. Behavior hooks in JSX are data-* attributes, never class names.
+ */
+
+@property --stage-ang {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* Scrollbar-hide helper (no Tailwind equivalent that works cross-browser). */
+/* The stage scrolls the DOCUMENT (Safari bar behavior depends on it); keep
+   the prior chrome-less look by hiding the document scrollbar. */
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+.stage-noscroll {
+  scrollbar-width: none;
+}
+.stage-noscroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Keyframes for the pseudo-element effects below. */
+@keyframes stage-band-sweep {
+  to {
+    transform: translateX(430%) skewX(-8deg);
+  }
+}
+@keyframes stage-glimm {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes stage-inputbar {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(350%);
+  }
+}
+@keyframes stage-border-spin {
+  to {
+    --stage-ang: 360deg;
+  }
+}
+
+/* Effect colors (--stage-band-core/-halo, --stage-spot, --stage-sheen) are
+ * theme tokens — defined per mode in styles/light-theme-colors.css and
+ * styles/dark-theme-colors.css, overridable by agent themes like any other
+ * token. This file only consumes them. */
+
+/* Page sweep on surface swap (band runs via animate-stage-band-sweep). */
+.stage-glimmband::before {
+  content: "";
+  position: absolute;
+  top: -10%;
+  bottom: -10%;
+  left: 0;
+  width: 34%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    var(--stage-band-halo) 32%,
+    var(--stage-band-core) 50%,
+    var(--stage-band-halo) 68%,
+    transparent 100%
+  );
+  filter: blur(8px);
+  transform: translateX(-140%) skewX(-8deg);
+}
+.stage-glimmband[data-running="true"]::before {
+  animation: stage-band-sweep 0.6s cubic-bezier(0.55, 0, 0.25, 1) forwards;
+}
+
+/* Featured-card animated conic border. */
+.stage-featured-border {
+  background: conic-gradient(
+    from var(--stage-ang),
+    hsl(var(--primary)) 0%,
+    transparent 18%,
+    transparent 55%,
+    hsl(var(--primary)) 72%,
+    transparent 90%
+  );
+  animation: stage-border-spin 3.2s linear infinite;
+}
+
+/* Hover spotlight — follows the pointer via runtime --stage-mx/--stage-my. */
+.stage-spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  background: radial-gradient(
+    320px circle at var(--stage-mx, 50%) var(--stage-my, 50%),
+    var(--stage-spot),
+    transparent 65%
+  );
+}
+.stage-spotlight:hover::before {
+  opacity: 1;
+}
+
+/* Sheen sweep on chips / CTAs. */
+.stage-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 35%, var(--stage-sheen) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: stage-glimm 2.5s cubic-bezier(0.55, 0, 0.25, 1) infinite;
+}
+
+/* Skeleton shimmer track. */
+.stage-shimmer-track::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, var(--shimmer-b) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: stage-glimm 1.6s ease-in-out infinite;
+}
+
+/* Waterfall: children's sweeps cascade top to bottom. */
+.stage-skeleton-stagger > :nth-child(2)::after {
+  animation-delay: 90ms;
+}
+.stage-skeleton-stagger > :nth-child(3)::after {
+  animation-delay: 180ms;
+}
+.stage-skeleton-stagger > :nth-child(4)::after {
+  animation-delay: 270ms;
+}
+.stage-skeleton-stagger > :nth-child(5)::after {
+  animation-delay: 360ms;
+}
+.stage-skeleton-stagger > :nth-child(6)::after {
+  animation-delay: 450ms;
+}
+
+/* Omnibox working progress bar. */
+.stage-progress-track::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary)), transparent);
+  animation: stage-inputbar 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-glimmband::before,
+  .stage-featured-border,
+  .stage-spotlight::before,
+  .stage-sheen::after,
+  .stage-shimmer-track::after,
+  .stage-progress-track::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced-motion must override the effect animations */
+    animation: none !important;
+  }
+}
+
+/* Markdown element styles — styling of HTML the markdown renderer emits, which
+   utilities can't reach. Colors via theme tokens. Applied via `.stage-md`. */
+.stage-md p {
+  margin: 0 0 0.9em;
+}
+.stage-md p:last-child {
+  margin-bottom: 0;
+}
+.stage-md ul,
+.stage-md ol {
+  margin: 0 0 0.9em;
+  padding-left: 1.3em;
+}
+.stage-md li {
+  margin: 0.25em 0;
+}
+.stage-md a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.stage-md code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.85em;
+  background: hsl(var(--muted));
+  border-radius: 5px;
+  padding: 1px 5px;
+}
+.stage-md h1,
+.stage-md h2,
+.stage-md h3 {
+  font-size: 1.05em;
+  font-weight: 650;
+  color: hsl(var(--foreground));
+  margin: 1.1em 0 0.45em;
+}
+.stage-md blockquote {
+  margin: 0 0 0.9em;
+  padding-left: 0.9em;
+  border-left: 2px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+}
+.stage-md strong {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}

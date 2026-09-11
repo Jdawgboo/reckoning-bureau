@@ -1,0 +1,20 @@
+/*
+ * The Reckoning Bureau — brand theming.
+ *
+ * The Bureau's ink is a dry oxblood: the colour of a rubber stamp pressed on
+ * manila, not a startup accent. Everything else (neutrals, warning, success)
+ * stays platform-owned warm paper, which is exactly the ground this office
+ * should be printed on.
+ */
+
+:root.light {
+  --primary: 4 58% 34%;
+  --primary-foreground: 40 30% 97%;
+  --ring: 4 58% 34%;
+}
+
+:root.dark {
+  --primary: 6 62% 62%;
+  --primary-foreground: 20 30% 10%;
+  --ring: 6 62% 62%;
+}

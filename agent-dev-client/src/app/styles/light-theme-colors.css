@@ -1,0 +1,88 @@
+/* 🌞 Light Color System
+Applied when <html> root element has class="light"
+*/
+
+:root.light {
+  /* Tells the BROWSER (not just the page) this is a light UI — Safari tints
+     its own toolbar/safe areas per this, not per the OS appearance. */
+  color-scheme: light;
+
+  /* Base colors — refined warm neutrals (shared by chat + stage) */
+  --background: 40 20% 97%; /* warm paper ground */
+  --foreground: 30 4% 11%; /* warm near-black ink */
+  --primary: 30 4% 11%; /* monochrome brand = ink; the one brand knob */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 228 15.15% 6.47%;
+  --muted: 40 22% 94%; /* warm soft surface (chips, insets) */
+  --muted-foreground: 36 5% 41%;
+  --muted-foreground-subtle: 37 7% 59%; /* third ink tone */
+
+  /* Accent & interactive colors */
+  --accent: 220 9% 91%;
+  --accent-hover: 220 9% 85%;
+  --accent-foreground: 224 71.4% 4.1%;
+
+  /* Status colors */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 152 54% 40%;
+  --success-foreground: 0 0% 98%;
+  --warning: 26 90% 37%; /* amber caution */
+  --warning-foreground: 0 0% 100%;
+
+  /* Component colors */
+  --card: 0 0% 100%; /* white surface, elevated above the warm ground */
+  --card-foreground: var(--foreground);
+
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+
+  /* Form colors */
+  --border: 38 15% 89%; /* warm hairline */
+  --input: 38 15% 89%;
+  --ring: 30 4% 11%;
+
+  /* Link colors */
+  --link: var(--primary);
+  --link-hover: var(--muted-foreground);
+  --link-visited: var(--muted-foreground);
+
+  /* Voice waveform ink — platform-owned (not an agent brand knob). Softer
+   * warm grey instead of var(--primary): full ink is too stark at the
+   * waveform's stroke opacity on the light ground. */
+  --waveform: 33 5% 32%;
+
+  /* Special effects */
+  --glass: 0 0% 0% / 0.2;
+
+  /* Chart colors — multi-hue */
+  --chart-1: 212 68% 50%;
+  --chart-2: 160 73% 40%;
+  --chart-3: 40 100% 46%;
+  --chart-4: 120 100% 26%;
+  --chart-5: 250 49% 44%;
+  --chart-6: 1 73% 58%;
+
+  --table-border-color: rgba(0, 0, 0, 0.1);
+  --user-message-bg-color: #ededee;
+
+  /* Stage effect colors (consumed by stage-effects.css, which owns only the
+     motion geometry). On the light ground the band must be MONOTONE ink —
+     a white core between dark halos flickers dark-flash-dark as it passes;
+     one soft shade wave (core just above halo) glides smoothly. */
+  --stage-band-core: hsl(var(--foreground) / 0.05);
+  --stage-band-halo: hsl(var(--foreground) / 0.025);
+  --stage-spot: hsl(var(--foreground) / 0.06);
+  --stage-sheen: hsl(var(--card) / 0.5);
+
+  /* Shimmer effect colors */
+  --shimmer-base: var(--muted-foreground);
+  --shimmer-highlight: 0 0% 100%;
+  --shimmer-highlight-opacity: 0.8;
+  --shimmer-a: rgba(28, 27, 26, 0.05);
+  --shimmer-b: rgba(28, 27, 26, 0.11);
+
+  /* Elevation */
+  --shadow: 0 1px 2px rgba(28, 27, 26, 0.05), 0 8px 28px rgba(28, 27, 26, 0.08);
+  --shadow-lift: 0 2px 6px rgba(28, 27, 26, 0.07), 0 16px 44px rgba(28, 27, 26, 0.12);
+}

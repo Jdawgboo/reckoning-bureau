@@ -1,0 +1,82 @@
+/* 🌙 Dark Color System */
+/* Applied when <html> root element has class="dark" */
+:root.dark {
+  color-scheme: dark;
+
+  --background: 180 4% 5%;
+  --foreground: 45 11% 94%;
+  --primary: 45 11% 94%;
+  --primary-foreground: 180 4% 5%;
+  --secondary: 45 11% 94%;
+  --secondary-foreground: 180 4% 5%;
+  --muted: 140 4% 11%;
+  --muted-foreground: 105 2% 61%;
+  --muted-foreground-subtle: 135 2% 38%;
+
+  /* Accent & interactive colors */
+  --accent: 140 4% 14%;
+  --accent-hover: 140 4% 18%;
+  --accent-foreground: 45 11% 94%;
+
+  /* Status colors */
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --success: 152 49% 52%;
+  --success-foreground: 0 0% 98%;
+  --warning: 33 71% 59%;
+  --warning-foreground: 180 4% 5%;
+
+  /* Component colors */
+  --card: 140 5% 8%;
+  --card-foreground: 45 11% 94%;
+
+  --popover: 0 0% 3%;
+  --popover-foreground: 0 0% 100%;
+
+  /* Form colors */
+  --border: 140 4% 14%;
+  --input: 140 4% 14%;
+  --ring: 45 11% 94%;
+
+  /* Link colors */
+  --link: var(--primary);
+  --link-hover: var(--muted-foreground);
+  --link-visited: var(--muted-foreground);
+
+  /* Voice waveform ink — platform-owned (not an agent brand knob). Follows
+   * the brand ink: off-white reads well on the dark ground. */
+  --waveform: var(--primary);
+
+  /* Special effects */
+  --glass: 0 0% 0% / 0.3;
+
+  /* Chart colors — multi-hue */
+  --chart-1: 212 76% 56%;
+  --chart-2: 160 72% 36%;
+  --chart-3: 39 100% 39%;
+  --chart-4: 120 100% 26%;
+  --chart-5: 246 66% 72%;
+  --chart-6: 0 71% 65%;
+
+  --table-border-color: rgba(255, 255, 255, 0.1);
+  --user-message-bg-color: #2a2a2a;
+
+  /* Stage effect colors (consumed by stage-effects.css, which owns only the
+     motion geometry). The light core carries the effect on the dark ground,
+     so the halo can be stronger than in the light theme. */
+  --stage-band-core: hsl(var(--foreground) / 0.5);
+  --stage-band-halo: hsl(var(--foreground) / 0.22);
+  --stage-spot: hsl(var(--foreground) / 0.07);
+  --stage-sheen: hsl(var(--foreground) / 0.35);
+
+  /* Shimmer effect colors */
+  --shimmer-base: var(--muted-foreground);
+  --shimmer-highlight: var(--foreground);
+  --shimmer-highlight-opacity: 0.7;
+  --shimmer-a: rgba(242, 241, 238, 0.04);
+  --shimmer-b: rgba(242, 241, 238, 0.1);
+
+  /* Elevation */
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.45), 0 16px 44px rgba(0, 0, 0, 0.6);
+}

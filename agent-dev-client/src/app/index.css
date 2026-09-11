@@ -1,0 +1,37 @@
+/* 📁 CSS imports MUST come first */
+
+/* First import theme colors according to the <html> root element's class */
+@import "./styles/light-theme-colors.css";
+@import "./styles/dark-theme-colors.css";
+
+@import "./styles/typography.css";
+@import "./styles/containers.css";
+@import "./styles/utilities.css";
+@import "./styles/markdown-style.css";
+
+/* Tailwind CSS directives */
+@import "tailwindcss";
+@config "../../tailwind.config.cjs";
+
+@theme {
+  --breakpoint-xs: 30rem;
+}
+
+/* Tailwind v4 defaults bare `border-*` to `currentColor`; restore the theme hairline. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: hsl(var(--border));
+  }
+}
+
+#root,
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: hsl(var(--background));
+}

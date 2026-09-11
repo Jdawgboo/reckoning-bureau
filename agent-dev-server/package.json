@@ -1,0 +1,46 @@
+{
+  "name": "agent-dev-server",
+  "version": "10.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node ./build/app.js",
+    "dev": "node ./esbuild.dev.mjs",
+    "build": "node ./esbuild.prod.mjs",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.8.1",
+    "@types/node": "^24.13.3",
+    "@types/ws": "^8.18.1",
+    "esbuild": "^0.25.12",
+    "esbuild-plugin-copy": "^2.1.1",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@ai-sdk/amazon-bedrock": "^4.0.143",
+    "@ai-sdk/anthropic": "^3.0.103",
+    "@ai-sdk/google-vertex": "^4.0.173",
+    "@ai-sdk/openai": "^3.0.89",
+    "@ai-sdk/provider": "^3.0.14",
+    "@ai-sdk/provider-utils": "^4.0.40",
+    "@ai-sdk/xai": "^3.0.112",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@openrouter/ai-sdk-provider": "^2.10.0",
+    "@trpc/server": "^11.18.0",
+    "ai": "^6.0.237",
+    "best-effort-json-parser": "^1.5.1",
+    "compression": "^1.8.1",
+    "dedent": "^1.7.2",
+    "intl-messageformat": "^11.2.14",
+    "langfuse": "^3.38.20",
+    "mammoth": "^1.12.0",
+    "pdf-parse": "^2.4.5",
+    "read-excel-file": "^7.0.3",
+    "sharp": "^0.34.5",
+    "sirv": "^3.0.2",
+    "ws": "^8.21.1",
+    "zod": "^3.25.76"
+  }
+}
