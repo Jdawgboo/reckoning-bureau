@@ -14,6 +14,7 @@ import { DemandLetter } from './DemandLetter.tsx';
 import { EscalationPack } from './EscalationPack.tsx';
 import { IntakeDesk } from './IntakeDesk.tsx';
 import { MenuBoard, MenuBoardHeader, MenuBoardItem } from './MenuBoard.tsx';
+import { PaymentGate } from './PaymentGate.tsx';
 
 export const AGENT_SURFACE_COMPONENTS: Record<string, FC<A2uiNodeViewProps>> = {
   CaseFile,
@@ -23,4 +24,5 @@ export const AGENT_SURFACE_COMPONENTS: Record<string, FC<A2uiNodeViewProps>> = {
   MenuBoard,
   MenuBoardHeader,
   MenuBoardItem,
+  PaymentGate,
 };

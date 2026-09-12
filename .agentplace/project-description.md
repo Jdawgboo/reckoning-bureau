@@ -27,16 +27,21 @@ licensed lawyer.
 
 - **Front desk** (`IntakeDesk`) — the arrival screen: the desk's question, four
   intake lanes (refund refused, deposit withheld, paid and never delivered,
-  something else) and the office's three-step procedure.
+  something else), the three-step procedure, and a private invitation field for
+  a respondent who holds a sealed-settlement code.
 - **Procedural intake** — the agent interrogates one question at a time using
-  builtin screens, pressing for dates, amounts, exact wording and documents.
+  screens, pressing for dates, amounts, exact wording and documents.
 - **Case file** (`CaseFile`) — the grievance recorded as the office records it:
-  particulars, chronology, schedule of evidence (including the documents the
-  claimant does *not* yet hold), and remedy sought. Unfiled it is a draft; the
-  claimant presses the stamp and the register mints the docket number.
+  particulars, chronology, schedule of evidence, and remedy sought. Unfiled it
+  is a draft; the claimant presses the stamp and the register mints the docket
+  number.
 - **Durable register** — case files persist as JSON in shared agent storage under
-  a `RB-<year>-<sequence>` docket number, with a docket ledger of stamped
-  entries. They outlive the session that opened them.
+  a `RB-<year>-<sequence>` docket number, with stamped entries. They outlive the
+  session that opened them.
+- **Hosted filing-fee gate** (`PaymentGate`) — a claimant can explicitly create a
+  one-time **$29 USD** Stripe Checkout session for demand-letter preparation.
+  The Bureau never handles card details and must verify Stripe payment before it
+  treats paid paperwork as ready to issue.
 - **Demand letter** (`DemandLetter`) — a full letter before action on the
   Bureau's paper, prepared for the claimant's signature, copyable in one press.
   The Bureau never sends it; when the claimant confirms they have, the register
@@ -45,16 +50,29 @@ licensed lawyer.
   claimant to lodge: a chargeback with their card issuer, a referral to an
   ombudsman or redress scheme, or a small claim. Carries the facts the forum's
   form will demand, a full statement to paste, the documents to attach and the
-  steps in order. Lodging it stamps the docket and moves the file to `ESCALATED`.
-- **Escalation clock** — issuing a demand sets a durable one-off schedule on the
-  deadline. When it expires the office wakes itself, reads the file and takes the
-  escalation back to the claimant.
+  steps in order.
+- **Escalation clock** — issuing a real demand sets a durable one-off schedule
+  on the deadline. A visible `?tempo=demo` clock provides a clearly labelled,
+  accelerated product demonstration without changing the document's real date.
+- **Sealed settlement** — after a demand is recorded, the claimant can create
+  independent claimant and respondent capability codes. Each party enters one
+  confidential figure in their own panel; AES-encrypted figures are compared
+  only server-side. When the ranges overlap, the docket resolves at the
+  nearest-$10 midpoint without exposing either figure. After three failed
+  rounds, the figures are destroyed and ordinary escalation remains available.
 
 ## Current limits
 
-- The register accepts entries only from a press on the relevant screen; the
-  agent cannot write to it from conversation alone.
-- The register is keyed by docket number and shared across sessions: anyone who
-  holds a docket number can retrieve that file.
+- The register accepts ordinary entries only from a press on the relevant screen;
+  the agent cannot write them from conversation alone.
+- Ordinary case reads remain docket-keyed and shared across sessions. Sealed
+  figures are deliberately outside that record and require the separate opaque
+  capability code.
 - Nothing is ever transmitted to a counterparty or a forum by the Bureau. Every
-  outbound act is the claimant's own.
+  outbound act is the claimant's own, apart from a claimant voluntarily opening
+  their own Stripe-hosted checkout page.
+- There are no jurisdiction-specific UK or UAE packs. The current escalation
+  flow uses only facts established with the claimant and asks before naming a
+  forum; it must not invent local statutes, fees, or time limits.
+- The 15% recovered-outcome fee and consented multi-claimant assembly are
+  documented policies, not yet automated invoicing or grouping capabilities.

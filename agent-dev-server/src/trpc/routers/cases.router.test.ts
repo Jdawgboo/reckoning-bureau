@@ -163,4 +163,105 @@ describe('cases registry', () => {
     assert.strictEqual(index[0].docket, second.case.docket);
     assert.strictEqual(index[0].counterpartyName, 'Northwind Airways');
   });
+
+  it('compares sealed figures on the server without exposing either figure in docket reads', async () => {
+    process.env.SETTLEMENT_ENCRYPTION_KEY = Buffer.alloc(32, 7).toString('base64url');
+    const { ctx, files } = makeContext();
+    const api = caller(ctx);
+    const opened = await api.open(draft);
+    await api.addEntry({
+      docket: opened.case.docket,
+      stamp: 'DEMAND ISSUED',
+      note: 'Letter before action issued.',
+      status: 'demand_issued',
+    });
+
+    const started = await api.startSettlement({ docket: opened.case.docket });
+    assert.strictEqual(started.ok, true);
+    if (!started.ok) return;
+
+    const claimant = await api.redeemSettlementInvite({ code: started.claimantCode });
+    const respondent = await api.redeemSettlementInvite({ code: started.respondentCode });
+    assert.deepStrictEqual(claimant, { ok: true, docket: opened.case.docket, role: 'claimant' });
+    assert.deepStrictEqual(respondent, { ok: true, docket: opened.case.docket, role: 'respondent' });
+
+    const claimantFirst = await api.submitSealedFigure({ accessCode: started.claimantCode, amount: 1110 });
+    assert.strictEqual(claimantFirst.ok, true);
+    assert.strictEqual(claimantFirst.state, 'sealed');
+
+    const noZone = await api.submitSealedFigure({ accessCode: started.respondentCode, amount: 900 });
+    assert.strictEqual(noZone.ok, true);
+    assert.strictEqual(noZone.state, 'no_zone');
+    assert.strictEqual('settledAmount' in noZone && noZone.settledAmount, null);
+
+    await api.submitSealedFigure({ accessCode: started.claimantCode, amount: 1110 });
+    const settlement = await api.submitSealedFigure({ accessCode: started.respondentCode, amount: 1170 });
+    assert.strictEqual(settlement.ok, true);
+    assert.strictEqual(settlement.state, 'settled');
+    assert.strictEqual(settlement.settledAmount, 1140);
+
+    const publicCase = await api.get({ docket: opened.case.docket });
+    assert.strictEqual(publicCase?.status, 'resolved');
+    assert.deepStrictEqual(publicCase?.outcome, { routeUsed: 'zopa', amountRecovered: 1140 });
+    assert.strictEqual(JSON.stringify(publicCase).includes('1110'), false);
+    assert.strictEqual(JSON.stringify(publicCase).includes('1170'), false);
+    assert.strictEqual(files.get(`common/cases/${opened.case.docket}.json`)?.includes('1110'), false);
+    assert.strictEqual(files.get(`common/cases/${opened.case.docket}.json`)?.includes('1170'), false);
+  });
+
+  it('destroys sealed figures after the third non-overlapping round and preserves enforcement timing', async () => {
+    process.env.SETTLEMENT_ENCRYPTION_KEY = Buffer.alloc(32, 11).toString('base64url');
+    const { ctx, files } = makeContext();
+    const api = caller(ctx);
+    const opened = await api.open(draft);
+    await api.addEntry({
+      docket: opened.case.docket,
+      stamp: 'DEMAND ISSUED',
+      note: 'Letter before action issued.',
+      status: 'demand_issued',
+      nextActionDueAt: '2026-10-01',
+    });
+    const started = await api.startSettlement({ docket: opened.case.docket });
+    assert.strictEqual(started.ok, true);
+    if (!started.ok) return;
+
+    for (let round = 0; round < 3; round += 1) {
+      const claimant = await api.submitSealedFigure({ accessCode: started.claimantCode, amount: 1110 });
+      assert.strictEqual(claimant.ok, true);
+      const respondent = await api.submitSealedFigure({ accessCode: started.respondentCode, amount: 900 });
+      assert.strictEqual(respondent.ok, true);
+      if (round < 2) assert.strictEqual(respondent.state, 'no_zone');
+      else assert.strictEqual(respondent.state, 'exhausted');
+    }
+
+    const publicCase = await api.get({ docket: opened.case.docket });
+    assert.strictEqual(publicCase?.status, 'demand_issued');
+    assert.strictEqual(publicCase?.nextActionDueAt, '2026-10-01');
+    assert.strictEqual(publicCase?.docketEntries.at(-1)?.stamp, 'SEALED SETTLEMENT EXHAUSTED');
+    const storedSettlement = files.get(`common/cases/${opened.case.docket}.settlement.json`) ?? '';
+    assert.strictEqual(storedSettlement.includes('1110'), false);
+    assert.strictEqual(storedSettlement.includes('900'), false);
+  });
+
+  it('runs a clearly flagged demonstration clock without changing the real deadline field', async () => {
+    const { ctx } = makeContext();
+    const api = caller(ctx);
+    const opened = await api.open(draft);
+    await api.addEntry({
+      docket: opened.case.docket,
+      stamp: 'DEMAND ISSUED',
+      note: 'Letter before action issued.',
+      status: 'demand_issued',
+      nextActionDueAt: '2026-10-01',
+    });
+
+    const started = await api.startDemoClock({ docket: opened.case.docket, seconds: 8 });
+    assert.strictEqual(started.ok, true);
+    const completed = await api.completeDemoClock({ docket: opened.case.docket });
+    assert.strictEqual(completed.ok, true);
+    assert.strictEqual(completed.case?.flags.demo, true);
+    assert.strictEqual(completed.case?.clock.tempo, 'demo');
+    assert.strictEqual(completed.case?.nextActionDueAt, '2026-10-01');
+    assert.strictEqual(completed.case?.docketEntries.at(-1)?.stamp, 'DEADLINE ELAPSED');
+  });
 });

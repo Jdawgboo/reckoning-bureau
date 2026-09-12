@@ -158,7 +158,10 @@ Use storage according to the lifetime and audience of the data:
 
 - **Records** — durable business entities such as bookings, orders, catalog items, or per-visitor
   data, with an explicit access class.
-- **AgentStorage** — durable files and generated-agent resources.
+- **AgentStorage** — durable files and generated-agent resources. The Bureau's
+  ordinary case files live under `common/cases/<docket>.json`; confidential
+  settlement stores are separate encrypted files and are never part of a normal
+  docket read.
 - **State tree** — live workflow and screen state that must synchronize with the current session.
 - **Session history** — conversation messages and recoverable tool/component results.
 - **External service** — data whose authority remains outside Agentplace.
@@ -169,7 +172,8 @@ be safe to retry because inbox delivery and restarts can repeat work.
 
 Environment values are supplied through `.env.runtime`; a change restarts the development server.
 Provider credentials are relayed by the platform and must not be written into source, prompts,
-conversation history, or logs.
+conversation history, or logs. The Bureau's `SETTLEMENT_ENCRYPTION_KEY` is an agent-runtime secret:
+it encrypts bid values server-side and must never be rendered, logged, or committed.
 
 ## Instruction, skills, and configuration
 
@@ -186,7 +190,9 @@ of both when the tool schema or code is the authority.
 ## External surfaces
 
 Every published agent exposes MCP operations through `/mcp`. MCP uses the same agent behavior but
-projects screens to text and removes reasoning from the result.
+projects screens to text and removes reasoning from the result. The Bureau's Stripe connection is
+agent-scoped and limited to hosted Checkout creation and session retrieval; the web UI dispatches an
+explicit request, while the agent performs and verifies the external operation.
 
 Messaging-channel adapters use the shared channel runner for streaming, placeholder updates, text
 chunking, attachment policy, and durable channel-to-session mapping. Each adapter adds only its

@@ -5,6 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import type { A2uiNodeViewProps } from '@/app/lib/a2ui/catalog.tsx';
 import { arr, str } from '@/app/lib/a2ui/props.ts';
 import { useSurfaceAction } from '@/app/lib/a2ui/surface-context.ts';
+import { SettlementPortal } from './SealedSettlement.tsx';
 
 /**
  * The Bureau's front desk. Stable chrome (the office line, the stamp, the
@@ -158,6 +159,8 @@ export const IntakeDesk: FC<A2uiNodeViewProps> = ({ node }) => {
       <p className="mt-8 max-w-[62ch] font-mono text-body-xs leading-relaxed text-muted-foreground-subtle">
         {intl.formatMessage(messages.disclaimer)}
       </p>
+
+      <SettlementPortal />
     </section>
   );
 };

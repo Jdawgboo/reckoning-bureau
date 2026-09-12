@@ -95,6 +95,15 @@ export const DEMAND_LETTER: ComponentContract = {
           required: true,
           description: 'The ISO response deadline the visitor just committed to',
         },
+        demoMode: {
+          type: 'boolean',
+          description: 'True only when the visible URL has tempo=demo; use the accelerated demonstration clock instead of a real schedule',
+        },
+      },
+    },
+    demoClockElapsed: {
+      context: {
+        docket: { type: 'string', required: true, description: 'The docket whose visible demonstration clock reached zero' },
       },
     },
   },

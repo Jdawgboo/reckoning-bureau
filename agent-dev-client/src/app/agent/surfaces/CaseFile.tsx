@@ -7,6 +7,7 @@ import { arr, num, optStr, str } from '@/app/lib/a2ui/props.ts';
 import { useSurfaceAction } from '@/app/lib/a2ui/surface-context.ts';
 import { useLiveQuery } from '@/app/lib/hooks/useLiveQuery.ts';
 import { trpc } from '@/app/lib/trpc';
+import { ClaimantSettlementPanel } from './SealedSettlement.tsx';
 
 /**
  * The case file. Unfiled it is a draft the visitor stamps; the stamp calls
@@ -466,6 +467,8 @@ export const CaseFile: FC<A2uiNodeViewProps> = ({ node }) => {
       ) : (
         <CaseBody view={view} />
       )}
+
+      {docket && view.status === 'demand_issued' ? <ClaimantSettlementPanel docket={docket} /> : null}
 
       {docket ? null : (
         <div className="mt-8 border-t border-border pt-6">

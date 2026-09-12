@@ -1,5 +1,5 @@
-import { useCallback, useState, type FC } from 'react';
-import { Check, ClipboardCopy, Loader2, Stamp } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState, type FC } from 'react';
+import { Check, ClipboardCopy, Clock, Loader2, Stamp } from 'lucide-react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import type { A2uiNodeViewProps } from '@/app/lib/a2ui/catalog.tsx';
@@ -44,6 +44,20 @@ const messages = defineMessages({
     id: 'demandLetter.issueFailed',
     defaultMessage: 'The register refused the entry. Nothing was recorded — try again.',
   },
+  demoBand: { id: 'demandLetter.demoBand', defaultMessage: 'Accelerated — demonstration' },
+  demoRunning: { id: 'demandLetter.demoRunning', defaultMessage: 'Deadline elapses in {seconds}s' },
+  demoRealDate: {
+    id: 'demandLetter.demoRealDate',
+    defaultMessage: 'Preview only. The letter keeps its real calendar deadline.',
+  },
+  demoDrafting: {
+    id: 'demandLetter.demoDrafting',
+    defaultMessage: 'Deadline elapsed · drafting escalation #1',
+  },
+  demoFailed: {
+    id: 'demandLetter.demoFailed',
+    defaultMessage: 'The demonstration clock could not complete. The real case record is unchanged.',
+  },
 });
 
 function lines(value: unknown): string[] {
@@ -76,6 +90,13 @@ export const DemandLetter: FC<A2uiNodeViewProps> = ({ node }) => {
   const [issuing, setIssuing] = useState(false);
   const [issued, setIssued] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [demoClock, setDemoClock] = useState<{ endsAt: number; seconds: number } | null>(null);
+  const [demoRemaining, setDemoRemaining] = useState<number | null>(null);
+  const [demoDrafting, setDemoDrafting] = useState(false);
+  const [demoFailed, setDemoFailed] = useState(false);
+  const demoFired = useRef(false);
+  const demoMode =
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('tempo') === 'demo';
 
   const deadlineLabel = deadlineDate
     ? intl.formatDate(deadlineDate, { day: 'numeric', month: 'long', year: 'numeric' })
@@ -98,6 +119,39 @@ export const DemandLetter: FC<A2uiNodeViewProps> = ({ node }) => {
   ]
     .filter((block) => block.trim().length > 0)
     .join('\n\n');
+
+  useEffect(() => {
+    if (!demoClock || demoFired.current) {
+      return;
+    }
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((demoClock.endsAt - Date.now()) / 1000));
+      setDemoRemaining(remaining);
+      if (remaining > 0 || demoFired.current) {
+        return;
+      }
+      demoFired.current = true;
+      setDemoDrafting(true);
+      void trpc.cases
+        .completeDemoClock.mutate({ docket })
+        .then((result) => {
+          if ((result as { ok?: boolean } | null)?.ok !== true) {
+            setDemoFailed(true);
+            setDemoDrafting(false);
+            return;
+          }
+          dispatch?.('demoClockElapsed', { docket });
+        })
+        .catch((error) => {
+          console.error('[DemandLetter] demonstration clock failed:', error);
+          setDemoFailed(true);
+          setDemoDrafting(false);
+        });
+    };
+    tick();
+    const interval = window.setInterval(tick, 250);
+    return () => window.clearInterval(interval);
+  }, [demoClock, dispatch, docket]);
 
   const copy = useCallback(async () => {
     try {
@@ -125,8 +179,17 @@ export const DemandLetter: FC<A2uiNodeViewProps> = ({ node }) => {
         setFailed(true);
         return;
       }
+      if (demoMode) {
+        const demo = await trpc.cases.startDemoClock.mutate({ docket, seconds: 16 });
+        if ((demo as { ok?: boolean } | null)?.ok !== true) {
+          setDemoFailed(true);
+        } else {
+          setDemoClock({ endsAt: Date.now() + 16_000, seconds: 16 });
+          setDemoRemaining(16);
+        }
+      }
       setIssued(true);
-      dispatch?.('demandIssued', { docket, deadlineDate });
+      dispatch?.('demandIssued', { docket, deadlineDate, demoMode });
     } catch (error) {
       console.error('[DemandLetter] issue failed:', error);
       setFailed(true);
@@ -255,6 +318,29 @@ export const DemandLetter: FC<A2uiNodeViewProps> = ({ node }) => {
       <p className="mt-3 max-w-[68ch] font-mono text-body-xs leading-relaxed text-muted-foreground-subtle">
         {intl.formatMessage(failed ? messages.issueFailed : messages.issueNote)}
       </p>
+
+      {demoMode && issued ? (
+        <section className="mt-6 border-2 border-primary/70 bg-muted" aria-live="polite">
+          <div className="flex items-center gap-2 border-b border-primary/50 bg-primary px-4 py-2 font-mono text-body-xs uppercase tracking-caps text-primary-foreground">
+            <Clock className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            {intl.formatMessage(messages.demoBand)}
+          </div>
+          <div className="p-4">
+            {demoDrafting ? (
+              <p className="font-mono text-body-sm uppercase tracking-caps text-primary">
+                {intl.formatMessage(messages.demoDrafting)}
+              </p>
+            ) : demoClock && demoRemaining !== null ? (
+              <p className="font-display text-heading-lg font-semibold tabular-nums text-foreground">
+                {intl.formatMessage(messages.demoRunning, { seconds: demoRemaining })}
+              </p>
+            ) : null}
+            <p className="mt-2 max-w-[62ch] text-body-xs leading-relaxed text-muted-foreground">
+              {intl.formatMessage(demoFailed ? messages.demoFailed : messages.demoRealDate)}
+            </p>
+          </div>
+        </section>
+      ) : null}
     </section>
   );
 };

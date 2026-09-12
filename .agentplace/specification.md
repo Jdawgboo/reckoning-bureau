@@ -3,51 +3,79 @@
 ## Accepted business behavior
 
 1. **Voice and stance.** The agent speaks as the office, first person plural,
-   cold and procedural, entirely on the claimant's side. No sympathy theatre, no
-   emojis, at most one dry line per turn.
+   cold and procedural, entirely on the claimant's side. No sympathy theatre,
+   no emojis, at most one dry line per turn.
 2. **Compliance boundary.** Document preparation and case management only. Never
    legal advice, never representation, never a prediction of the outcome. Said
    plainly whenever it is at stake (will I win, should I settle, act for me), and
    the claimant is redirected to a lawyer for criminal, injury, custody,
    immigration or imminent-hearing matters.
 3. **Arrival.** The `[user opened the agent]` turn renders `IntakeDesk` with one
-   short line of text; no tool reads for that turn.
+   short line of text; no tool reads for that turn. The desk also contains a
+   capability-code entry to the respondent's sealed-settlement panel.
 4. **Intake is progressive.** One question at a time whenever the answer changes
    the next question; batched fields only for details that stand independently.
 5. **The register is the authority on filings.** Docket numbers are minted
    server-side (`RB-<year>-<4-digit>`); the model never composes one. A file
    exists only after the claimant presses the stamp and the mutation succeeds.
-6. **The Bureau does not transmit.** The demand letter is prepared for the
+6. **Hosted filing fee.** After a docket exists and a claimant elects to prepare
+   an issued demand, `PaymentGate` shows a single $29 USD line item. Stripe
+   Checkout is created only from an explicit browser press. Card details never
+   reach the Bureau. A demand is treated as paid only after Stripe confirms the
+   retained Checkout session.
+7. **The Bureau does not transmit.** The demand letter is prepared for the
    claimant's signature. The `DEMAND ISSUED` entry is written only when the
    claimant confirms they have sent it.
-7. **A deadline is watched.** Issuing a demand sets an `at` schedule on the
-   `escalation_review` handler for the deadline; the escalation run is
+8. **A real deadline is watched.** Issuing a regular demand sets an `at` schedule
+   on the `escalation_review` handler for the deadline; the escalation run is
    idempotent per fire time.
-8. **Grounding.** Facts come from the claimant, the file, or a tool result. No
-   invented statutes, rights, policy terms, amounts, deadlines or odds.
+9. **Demonstration tempo is explicit.** `?tempo=demo` starts a visible accelerated
+   clock after a demand is recorded. It is stamped as a demonstration, does not
+   change the letter's real calendar deadline, and triggers a live escalation
+   draft without additional visitor input.
+10. **Sealed settlement.** After a demand is recorded, claimant and respondent
+    receive separate high-entropy capability codes. Each figure is encrypted and
+    compared only in a deterministic server mutation. Normal docket reads,
+    conversation history, UI props, ledger text and artefacts never contain a
+    sealed figure. A successful overlap resolves at the nearest-$10 midpoint;
+    a failed round returns only “No zone of agreement in this round.” Three
+    failed rounds destroy the figures and leave the ordinary enforcement track
+    open.
+11. **Grounding.** Facts come from the claimant, the file, a tool result, or
+    Stripe payment verification. No invented statutes, rights, policy terms,
+    amounts, deadlines, payment state or odds.
 
 ## Primary journeys
 
 | Journey | Path | Observable outcome |
 |---|---|---|
-| Arrive | `[user opened the agent]` → `IntakeDesk` | Four lanes and the procedure, with the not-a-law-firm line |
+| Arrive | `[user opened the agent]` → `IntakeDesk` | Four lanes, procedure, not-a-law-firm line and confidential invitation entry |
 | Choose a lane | `openLane` action | Interrogation for that grievance type begins |
 | Open a file | `CaseFile` (no docket) → stamp → `cases.open` | Docket minted, `RECEIVED` stamped, `caseFiled` action returns the number |
-| Review a file | `CaseFile` with docket | Live register copy: status stamp, particulars, chronology, evidence, docket ledger |
-| Demand | `DemandLetter` → copy → "I have sent it" | `DEMAND ISSUED` entry, deadline recorded as next action, `demandIssued` action |
-| Clock set | `demandIssued` → `createSchedule` (`at`, `escalation_review`) | One line confirming the clock and what expiry triggers |
-| Deadline passes | `escalation_review` schedule → `[escalation-clock]` turn | The office reopens the matter and puts the next lever to the claimant |
-| Escalate | `EscalationPack` → copy statement → "I have lodged it" | Kind-specific stamp, status `escalated`, clock cleared, `packLodged` action |
+| Checkout | `PaymentGate` → `requestCheckout` → Stripe Checkout | Hosted $29 USD payment link appears only after an explicit press |
+| Review a file | `CaseFile` with docket | Live register copy: status stamp, particulars, chronology, evidence and docket ledger |
+| Demand | verified payment → `DemandLetter` → copy → “I have sent it” | `DEMAND ISSUED` entry and deadline recorded |
+| Clock set | ordinary `demandIssued` → `createSchedule` (`at`, `escalation_review`) | One line confirming the durable real clock |
+| Demo clock | `?tempo=demo` + `DemandLetter` issue | Visible accelerated countdown, `DEADLINE ELAPSED`, then an escalation-draft action |
+| Sealed settlement | `CaseFile` claimant panel or front-desk invitation → figure submit | One private figure per party; result only is visible to either party |
+| Settlement | overlapping figures | `SETTLED BY AGREEMENT`, resolved docket and midpoint amount; neither bid is shown |
+| Escalate | `EscalationPack` → copy statement → “I have lodged it” | Kind-specific stamp, status `ESCALATED`, clock cleared |
 
 ## Owner decisions
 
 - Concept: procedural grievance bureau, chosen over three alternatives for the
   hackathon build (durable multi-session case state, real escalation clocks,
-  end-to-end artifacts).
+  end-to-end artefacts).
 - Identity: warm-paper ground, IBM Plex Serif / Sans / Mono, oxblood stamp ink,
   rubber-stamp status language (`RECEIVED`, `DEMAND ISSUED`, `ESCALATED`).
 - Site mode `site`, header on, four grievance chips, composer reads
-  "State your grievance…".
+  “State your grievance…”.
+- Revenue: a single **$29 USD** hosted Checkout filing fee for demand-letter
+  preparation. The 15% recovery fee is a documented future policy and is not
+  automatically invoiced yet.
+- Jurisdiction discipline: no UK or UAE jurisdiction pack. Do not approximate
+  local fees, forms, regulators or statutes; use a fact-led generic flow until
+  an accurately sourced pack is built.
 - Cadence: continuous build; the owner reviews the front desk in Preview
   themselves (Builder-side Preview session attachment was unavailable).
 
@@ -55,26 +83,29 @@
 
 Case file JSON (`common/cases/<docket>.json`), maintained by the `cases` router:
 docket, openedAt, updatedAt, status (`received | demand_issued | escalated |
-resolved | withdrawn`), claimant name/contact, counterparty name/kind, category
-(lane id), summary, remedySought, amountValue + currency, chronology[],
-evidence[] (`held` flag), docketEntries[] (at, stamp, note), nextActionLabel,
-nextActionDueAt, artifacts[]. A `_sequence.json` holds the year's counter and
-`_index.json` a newest-first digest of the register.
+resolved | withdrawn`), claimant name/contact, counterparty name/kind, category,
+summary, remedySought, amountValue + currency, chronology[], evidence[] (`held`
+flag), docketEntries[] (at, stamp, note), nextActionLabel, nextActionDueAt,
+artifacts[], real-or-demo clock state, demo flag, outcome (route and recovery),
+and HMAC-linked settlement audit entries.
+
+A separate `common/cases/<docket>.settlement.json` contains only encrypted sealed
+figures and access-code hashes. `common/cases/_settlement_access.json` maps code
+hashes to a docket and role. Those files are never returned by `cases.get` and
+never rendered to a general case screen.
 
 ## Known limits
 
-- The register is docket-keyed and shared: possession of a docket number grants
-  read access to that file.
-- `artifacts[]` is reserved and currently unused; prepared documents live in the
-  conversation, not in storage.
-- The register only accepts an entry from a component confirmation (a browser
-  press). A claimant who says in words that they sent the demand is asked to
-  press the confirmation on the letter; the agent has no tool of its own for
-  writing to the register.
-- Verification status: the front desk was captured in Preview; intake, grounding
-  and case-file drafting were exercised end to end through the HTTP messaging
-  path and read back from traces. Not yet observed: the three register presses
-  (stamp, demand issued, pack lodged), which need a browser click, and a real
-  `escalation_review` fire — a one-off `at` schedule created in Preview did not
-  deliver within ten minutes of its fire time, so the clock's registration and
-  handler are code-verified only.
+- Ordinary case registers remain docket-keyed and shared: possession of a docket
+  number grants access to ordinary case facts. Sealed settlement requires its own
+  high-entropy capability code and is not part of that baseline.
+- The normal escalation schedule is durable; the accelerated demonstration clock
+  exists to make the product's autonomous path observable and requires the
+  demonstration screen to remain open.
+- Stripe success is verified when the claimant returns to the same conversation;
+  there is not yet a payment-complete webhook or automatic post-checkout resume.
+- The register's `artifacts[]` is still reserved. Settlement notice and account
+  artefacts are not generated files yet.
+- Multi-claimant assembly, automated outcome invoicing and jurisdiction-specific
+  packs are intentionally cut until they can be built with their own consent,
+  payment and primary-source fact boundaries.

@@ -14,6 +14,7 @@ import { DEMAND_LETTER } from './demand-letter.ts';
 import { ESCALATION_PACK } from './escalation-pack.ts';
 import { INTAKE_DESK } from './intake-desk.ts';
 import { MENU_BOARD } from './menu-board.ts';
+import { PAYMENT_GATE } from './payment-gate.ts';
 
 export const AGENT_CATALOG_ID = 'agent:custom-v1';
 
@@ -23,4 +24,5 @@ export const AGENT_SURFACE_CONTRACTS: Record<string, ComponentContract> = {
   [DEMAND_LETTER.component]: DEMAND_LETTER,
   [ESCALATION_PACK.component]: ESCALATION_PACK,
   [MENU_BOARD.component]: MENU_BOARD,
+  [PAYMENT_GATE.component]: PAYMENT_GATE,
 };
