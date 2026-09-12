@@ -19,10 +19,10 @@
    server-side (`RB-<year>-<4-digit>`); the model never composes one. A file
    exists only after the claimant presses the stamp and the mutation succeeds.
 6. **Hosted filing fee.** After a docket exists and a claimant elects to prepare
-   an issued demand, `PaymentGate` shows a single $29 USD line item. Stripe
-   Checkout is created only from an explicit browser press. Card details never
-   reach the Bureau. A demand is treated as paid only after Stripe confirms the
-   retained Checkout session.
+   an issued demand, `PaymentGate` shows a single $29 USD line item. Its narrow
+   server-side payment bridge creates Stripe Checkout only from an explicit
+   browser press. Card details never reach the Bureau. A demand is treated as
+   paid only after the payment gate verifies the retained Checkout session.
 7. **The Bureau does not transmit.** The demand letter is prepared for the
    claimant's signature. The `DEMAND ISSUED` entry is written only when the
    claimant confirms they have sent it.
@@ -102,8 +102,9 @@ never rendered to a general case screen.
 - The normal escalation schedule is durable; the accelerated demonstration clock
   exists to make the product's autonomous path observable and requires the
   demonstration screen to remain open.
-- Stripe success is verified when the claimant returns to the same conversation;
-  there is not yet a payment-complete webhook or automatic post-checkout resume.
+- Stripe success is verified by the PaymentGate when the claimant returns through
+  its Stripe success URL; there is not yet a payment-complete webhook or an
+  automatic return to an arbitrary later conversation.
 - The register's `artifacts[]` is still reserved. Settlement notice and account
   artefacts are not generated files yet.
 - Multi-claimant assembly, automated outcome invoicing and jurisdiction-specific

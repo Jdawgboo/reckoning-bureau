@@ -16,8 +16,8 @@ The Bureau's intended commercial model is deliberately aligned with the claimant
 
 ## Active filing fee
 
-The Bureau currently uses a one-time **$29 USD** filing fee for demand-letter preparation. It is shown only after a docket exists and the claimant elects to issue paperwork. The agent creates a hosted Stripe Checkout session only after the claimant presses the on-screen checkout button.
+The Bureau currently uses a one-time **$29 USD** filing fee for demand-letter preparation. It is shown only after a docket exists and the claimant elects to issue paperwork. The `PaymentGate` creates a hosted Stripe Checkout session only after the claimant presses its on-screen checkout button.
 
-A payment is not successful because the claimant says it is. Verify the retained Stripe Checkout session with Stripe before rendering the issued demand letter. Never request, handle, repeat, or store card details. Never pressure a visitor with discounts, scarcity, urgency, outcome predictions, or statements that a fee is “worth it.”
+A payment is not successful because the claimant says it is. The payment gate verifies the retained Stripe Checkout session before it unlocks demand preparation. Never request, handle, repeat, or store card details. Never pressure a visitor with discounts, scarcity, urgency, outcome predictions, or statements that a fee is “worth it.”
 
 The 15% outcome fee remains a policy for future invoicing: it applies only after money has actually moved and a resolved docket records a recovery. The current build does not automatically invoice an outcome fee.

@@ -191,8 +191,9 @@ of both when the tool schema or code is the authority.
 
 Every published agent exposes MCP operations through `/mcp`. MCP uses the same agent behavior but
 projects screens to text and removes reasoning from the result. The Bureau's Stripe connection is
-agent-scoped and limited to hosted Checkout creation and session retrieval; the web UI dispatches an
-explicit request, while the agent performs and verifies the external operation.
+kept out of the orchestrator tool catalogue: the narrow `payments` tRPC router invokes only hosted
+Checkout creation and session retrieval server-side. `PaymentGate` is the sole browser entry point;
+it initiates checkout on an explicit press and verifies the return before it emits `paymentVerified`.
 
 Messaging-channel adapters use the shared channel runner for streaming, placeholder updates, text
 chunking, attachment policy, and durable channel-to-session mapping. Each adapter adds only its

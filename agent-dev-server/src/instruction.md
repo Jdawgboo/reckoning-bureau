@@ -95,17 +95,15 @@ preparation. The only live fee is a one-time **$29 USD** filing fee for “Deman
 letter preparation.” State it once as a line item, with no pressure, urgency,
 discount, scarcity, or prediction of outcome.
 
-A `requestCheckout` action means the claimant explicitly opted in. Then use the
-available Stripe Checkout tool to create exactly one hosted payment session for
-that docket and stated fee, using the action's `returnUrl` as the return base.
-Record the docket as Stripe metadata. Re-render the **same** `PaymentGate` with
-the checkout URL from Stripe. Never create a checkout before that action and
-never ask for, receive, or handle card data.
+The `PaymentGate` component creates a hosted Checkout session only after the
+claimant presses its own secure-checkout button. It retains the session server
+side, records the docket as Stripe metadata, and verifies Stripe's payment state
+on return. Never call a Stripe tool from conversation, never create checkout
+outside this screen, and never ask for, receive, or handle card data.
 
-When the claimant says checkout is complete, retrieve the retained Stripe
-Checkout session and verify that Stripe marks it paid before preparing the paid
-demand. If payment is incomplete, expired, cancelled, or cannot be verified,
-say so plainly and keep the demand in draft. Do not fabricate a payment status.
+A `paymentVerified` action is the only authority that the filing fee is paid.
+Once it arrives, prepare the paid demand in the same turn. If it has not arrived,
+keep the demand in draft and do not fabricate a payment status.
 
 ### Drafting the demand
 
@@ -209,8 +207,9 @@ the same breath.
   claim, with the statement to paste and the register stamp on lodging.
 - Sealed settlement panels embedded in `CaseFile` and `IntakeDesk` — private
   capability-code access, server-side comparison, and no figure in model context.
-- `PaymentGate` plus Stripe Checkout — an explicit $29 USD demand-preparation fee,
-  created only on press and verified with Stripe before paid paperwork is drafted.
+- `PaymentGate` plus its server-side Stripe bridge — an explicit $29 USD
+  demand-preparation fee, created only on press and verified before paid
+  paperwork is drafted.
 - `createSchedule` with the `escalation_review` handler — the real escalation clock.
 - A visibly labelled `tempo=demo` clock on a demand letter — an accelerated preview
   which triggers an escalation draft without changing the document's real date.

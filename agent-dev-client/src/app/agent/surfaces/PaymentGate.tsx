@@ -1,10 +1,11 @@
-import { useCallback, type FC } from 'react';
-import { ExternalLink, LockKeyhole } from 'lucide-react';
+import { useCallback, useEffect, useState, type FC } from 'react';
+import { BadgeCheck, ExternalLink, Loader2, LockKeyhole } from 'lucide-react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import type { A2uiNodeViewProps } from '@/app/lib/a2ui/catalog.tsx';
-import { num, optStr, str } from '@/app/lib/a2ui/props.ts';
+import { num, str } from '@/app/lib/a2ui/props.ts';
 import { useSurfaceAction } from '@/app/lib/a2ui/surface-context.ts';
+import { trpc } from '@/app/lib/trpc';
 
 const messages = defineMessages({
   label: { id: 'paymentGate.label', defaultMessage: 'Filing fee' },
@@ -19,9 +20,18 @@ const messages = defineMessages({
   ready: { id: 'paymentGate.ready', defaultMessage: 'Open secure checkout' },
   returnNote: {
     id: 'paymentGate.returnNote',
-    defaultMessage: 'After checkout, return here and tell us it is complete. We verify payment before preparing the issued document.',
+    defaultMessage: 'After checkout, return here. We verify payment before preparing the issued document.',
+  },
+  checking: { id: 'paymentGate.checking', defaultMessage: 'Verifying payment…' },
+  verified: { id: 'paymentGate.verified', defaultMessage: 'Filing fee verified' },
+  continue: { id: 'paymentGate.continue', defaultMessage: 'Prepare the demand letter' },
+  unavailable: {
+    id: 'paymentGate.unavailable',
+    defaultMessage: 'Secure checkout is unavailable at present. No payment was taken.',
   },
 });
+
+type PaymentStatus = 'loading' | 'none' | 'pending' | 'paid' | 'unavailable';
 
 export const PaymentGate: FC<A2uiNodeViewProps> = ({ node }) => {
   const intl = useIntl();
@@ -29,19 +39,62 @@ export const PaymentGate: FC<A2uiNodeViewProps> = ({ node }) => {
   const docket = str(node.props.docket);
   const itemName = str(node.props.itemName);
   const currency = str(node.props.currency).toUpperCase() || 'USD';
-  const amountCents = num(node.props.amountCents);
-  const checkoutUrl = optStr(node.props.checkoutUrl);
-  const amount = intl.formatNumber((amountCents ?? 0) / 100, {
+  const amountCents = num(node.props.amountCents) ?? 0;
+  const [status, setStatus] = useState<PaymentStatus>('loading');
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+
+  const sessionId = typeof window === 'undefined'
+    ? null
+    : new URLSearchParams(window.location.search).get('session_id');
+  const returnedFromCheckout = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('checkout') === 'success';
+  const amount = intl.formatNumber(amountCents / 100, {
     style: 'currency',
     currency,
     maximumFractionDigits: 2,
   });
 
-  const requestCheckout = useCallback(() => {
+  useEffect(() => {
     if (!docket) return;
-    const returnUrl = typeof window === 'undefined' ? '' : `${window.location.origin}${window.location.pathname}`;
-    if (!returnUrl) return;
-    dispatch?.('requestCheckout', { docket, returnUrl });
+    if (returnedFromCheckout && sessionId?.startsWith('cs_')) {
+      setStatus('loading');
+      void trpc.payments.verifyCheckout
+        .mutate({ docket, sessionId })
+        .then((result) => {
+          const next = result as { ok?: boolean; status?: 'pending' | 'paid' } | null;
+          setStatus(next?.ok && next.status ? next.status : 'unavailable');
+        })
+        .catch(() => setStatus('unavailable'));
+      return;
+    }
+    void trpc.payments.getStatus
+      .query({ docket })
+      .then((result) => setStatus((result as { status?: PaymentStatus } | null)?.status ?? 'none'))
+      .catch(() => setStatus('unavailable'));
+  }, [docket, returnedFromCheckout, sessionId]);
+
+  const createCheckout = useCallback(async () => {
+    if (!docket || typeof window === 'undefined') return;
+    setStatus('loading');
+    try {
+      const result = await trpc.payments.createCheckout.mutate({
+        docket,
+        returnUrl: `${window.location.origin}${window.location.pathname}${window.location.search}`,
+      });
+      const data = result as { ok?: boolean; status?: 'pending' | 'paid'; checkoutUrl?: string } | null;
+      if (!data?.ok) {
+        setStatus('unavailable');
+        return;
+      }
+      setStatus(data.status ?? 'pending');
+      setCheckoutUrl(data.checkoutUrl ?? null);
+    } catch {
+      setStatus('unavailable');
+    }
+  }, [docket]);
+
+  const continueToDraft = useCallback(() => {
+    if (docket) dispatch?.('paymentVerified', { docket });
   }, [dispatch, docket]);
 
   return (
@@ -81,11 +134,25 @@ export const PaymentGate: FC<A2uiNodeViewProps> = ({ node }) => {
           {intl.formatMessage(messages.safety)}
         </p>
 
-        {checkoutUrl ? (
+        {status === 'paid' ? (
+          <>
+            <div className="mt-6 flex items-center gap-2 border-l-2 border-primary bg-muted px-4 py-3 text-body-sm text-foreground">
+              <BadgeCheck className="h-4 w-4 shrink-0 text-primary" strokeWidth={1.75} aria-hidden="true" />
+              {intl.formatMessage(messages.verified)}
+            </div>
+            <button
+              type="button"
+              onClick={continueToDraft}
+              className="mt-4 flex w-full items-center justify-center gap-2 border-2 border-primary bg-primary px-4 py-3 font-mono text-body-xs uppercase tracking-caps text-primary-foreground transition hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-primary active:scale-[0.98]"
+            >
+              {intl.formatMessage(messages.continue)}
+            </button>
+          </>
+        ) : checkoutUrl ? (
           <>
             <a
               href={checkoutUrl}
-              target="_blank"
+              target="_self"
               rel="noreferrer"
               className="mt-6 flex w-full items-center justify-center gap-2 border-2 border-primary bg-primary px-4 py-3 font-mono text-body-xs uppercase tracking-caps text-primary-foreground transition hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-primary active:scale-[0.98]"
             >
@@ -96,15 +163,23 @@ export const PaymentGate: FC<A2uiNodeViewProps> = ({ node }) => {
               {intl.formatMessage(messages.returnNote)}
             </p>
           </>
+        ) : status === 'unavailable' ? (
+          <p className="mt-6 border-l-2 border-primary px-3 text-body-sm text-foreground">
+            {intl.formatMessage(messages.unavailable)}
+          </p>
         ) : (
           <button
             type="button"
-            onClick={requestCheckout}
-            disabled={!docket}
+            onClick={createCheckout}
+            disabled={!docket || status === 'loading'}
             className="mt-6 flex w-full items-center justify-center gap-2 border-2 border-primary px-4 py-3 font-mono text-body-xs uppercase tracking-caps text-primary transition hover:bg-primary hover:text-primary-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-primary active:scale-[0.98] disabled:opacity-60"
           >
-            <LockKeyhole className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-            {intl.formatMessage(messages.begin)}
+            {status === 'loading' ? (
+              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.75} aria-hidden="true" />
+            ) : (
+              <LockKeyhole className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+            )}
+            {status === 'loading' ? intl.formatMessage(messages.checking) : intl.formatMessage(messages.begin)}
           </button>
         )}
       </div>
