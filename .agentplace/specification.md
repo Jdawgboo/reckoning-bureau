@@ -41,7 +41,16 @@
     a failed round returns only “No zone of agreement in this round.” Three
     failed rounds destroy the figures and leave the ordinary enforcement track
     open.
-11. **Grounding.** Facts come from the claimant, the file, a tool result, or
+11. **Face the Opposition.** A registered CaseFile exposes a claimant-initiated,
+    bounded respondent-side hearing. The specialist receives only the trusted
+    action packet containing chronology and held-exhibit details; it has no
+    tools and never receives the case summary, assessment, strength score,
+    settlement floor, sealed values, or red-team notes. It asks one direct,
+    factual question at a time, stops immediately on “stop,” and after 10
+    answers or “end the hearing” returns a note on the three weakest answers
+    and the exhibit each attack concerned (or the absence of one). It never
+    insults, predicts an outcome, or says who would win.
+12. **Grounding.** Facts come from the claimant, the file, a tool result, or
     Stripe payment verification. No invented statutes, rights, policy terms,
     amounts, deadlines, payment state or odds.
 
@@ -58,6 +67,7 @@
 | Clock set | ordinary `demandIssued` → `createSchedule` (`at`, `escalation_review`) | One line confirming the durable real clock |
 | Demo clock | `?tempo=demo` + `DemandLetter` issue | Visible accelerated countdown, `DEADLINE ELAPSED`, then an escalation-draft action |
 | Sealed settlement | `CaseFile` claimant panel or front-desk invitation → figure submit | One private figure per party; result only is visible to either party |
+| Face the Opposition | registered `CaseFile` → `faceOpposition` → `OppositionHearing` | One evidence-only challenge question at a time; a stopped or final review state is visible in the same hearing screen |
 | Settlement | overlapping figures | `SETTLED BY AGREEMENT`, resolved docket and midpoint amount; neither bid is shown |
 | Escalate | `EscalationPack` → copy statement → “I have lodged it” | Kind-specific stamp, status `ESCALATED`, clock cleared |
 
@@ -87,7 +97,11 @@ resolved | withdrawn`), claimant name/contact, counterparty name/kind, category,
 summary, remedySought, amountValue + currency, chronology[], evidence[] (`held`
 flag), docketEntries[] (at, stamp, note), nextActionLabel, nextActionDueAt,
 artifacts[], real-or-demo clock state, demo flag, outcome (route and recovery),
-and HMAC-linked settlement audit entries.
+and HMAC-linked settlement audit entries. The opposition hearing does not write
+another durable case record: its packet and question-and-answer transcript stay
+within the current rendered hearing and session history. Only chronology plus
+held evidence labels/descriptions enter that packet; confidential settlement
+storage and any future assessment or red-team data are excluded by design.
 
 A separate `common/cases/<docket>.settlement.json` contains only encrypted sealed
 figures and access-code hashes. `common/cases/_settlement_access.json` maps code
@@ -110,3 +124,6 @@ never rendered to a general case screen.
 - Multi-claimant assembly, automated outcome invoicing and jurisdiction-specific
   packs are intentionally cut until they can be built with their own consent,
   payment and primary-source fact boundaries.
+- The current register does not retain original uploaded exhibit bodies. The
+  opposition hearing can use only the held-exhibit labels/descriptions and the
+  timeline, and must say nothing that implies it inspected a missing attachment.

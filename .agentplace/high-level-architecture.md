@@ -174,6 +174,10 @@ Environment values are supplied through `.env.runtime`; a change restarts the de
 Provider credentials are relayed by the platform and must not be written into source, prompts,
 conversation history, or logs. The Bureau's `SETTLEMENT_ENCRYPTION_KEY` is an agent-runtime secret:
 it encrypts bid values server-side and must never be rendered, logged, or committed.
+The claimant-facing opposition hearing is a separate, tool-less subagent. Its
+input is the CaseFile-generated chronology-and-held-exhibit packet plus the
+hearing-only transcript; it receives no whole case file, assessment, strength
+score, settlement information, or red-team notes.
 
 ## Instruction, skills, and configuration
 

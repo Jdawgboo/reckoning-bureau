@@ -60,6 +60,11 @@ licensed lawyer.
   only server-side. When the ranges overlap, the docket resolves at the
   nearest-$10 midpoint without exposing either figure. After three failed
   rounds, the figures are destroyed and ordinary escalation remains available.
+- **Face the Opposition** (`OppositionHearing`) — a claimant can open a bounded,
+  respondent-side evidence hearing from a registered case file. Locked-down
+  counsel sees only the chronology and the exhibits recorded as held, asks one
+  direct factual question at a time, stops immediately on “stop,” and closes
+  after 10 answers or an end request with a three-answer record-gap note.
 
 ## Current limits
 
@@ -76,3 +81,6 @@ licensed lawyer.
   forum; it must not invent local statutes, fees, or time limits.
 - The 15% recovered-outcome fee and consented multi-claimant assembly are
   documented policies, not yet automated invoicing or grouping capabilities.
+- Evidence entries currently retain held-document labels and descriptions, not
+  uploaded attachment bodies. The opposition hearing cannot claim to have read
+  a source file that the register does not store.
