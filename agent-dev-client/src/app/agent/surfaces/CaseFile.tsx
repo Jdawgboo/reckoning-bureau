@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, type FC, type ReactNode } from 'react';
-import { Check, Loader2, Square, Stamp } from 'lucide-react';
+import { Check, Loader2, Square, Stamp, Swords } from 'lucide-react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import type { A2uiNodeViewProps } from '@/app/lib/a2ui/catalog.tsx';
@@ -57,6 +57,11 @@ const messages = defineMessages({
   laneDeposit: { id: 'caseFile.lane.depositKept', defaultMessage: 'Deposit withheld' },
   laneDelivery: { id: 'caseFile.lane.neverDelivered', defaultMessage: 'Paid, never delivered' },
   laneOther: { id: 'caseFile.lane.somethingElse', defaultMessage: 'Other grievance' },
+  faceOpposition: { id: 'caseFile.faceOpposition', defaultMessage: 'Face the Opposition' },
+  faceOppositionNote: {
+    id: 'caseFile.faceOppositionNote',
+    defaultMessage: 'A cold test of the chronology and exhibits already in this file. It is not a prediction of outcome.',
+  },
 });
 
 const STATUS_MESSAGES = {
@@ -127,6 +132,21 @@ function readEvidence(value: unknown): EvidenceRow[] {
       return { label: str(row.label), held: row.held === true, detail: optStr(row.detail) };
     })
     .filter((row) => row.label.length > 0);
+}
+
+function buildHearingPacket(view: CaseView): string {
+  const chronology = view.chronology.length
+    ? view.chronology
+        .map((row) => `- ${row.date ? `${row.date} — ` : ''}${row.event}`)
+        .join('\n')
+    : '- No chronology entries are recorded.';
+  const exhibits = view.evidence.filter((row) => row.held);
+  const heldExhibits = exhibits.length
+    ? exhibits
+        .map((row) => `- ${row.label}${row.detail ? ` — ${row.detail}` : ''}`)
+        .join('\n')
+    : '- No exhibits are recorded as held.';
+  return `TIMELINE\n${chronology}\n\nEXHIBITS RECORDED AS HELD\n${heldExhibits}`;
 }
 
 function readDocketEntries(value: unknown): DocketRow[] {
@@ -415,6 +435,7 @@ export const CaseFile: FC<A2uiNodeViewProps> = ({ node }) => {
   const record = stored.data as Record<string, unknown> | null | undefined;
   const view = docket && record ? viewFromRecord(record) : draft;
   const statusMessage = view.status ? STATUS_MESSAGES[view.status] : null;
+  const hearingPacket = useMemo(() => buildHearingPacket(view), [view]);
 
   return (
     <section className="w-full">
@@ -469,6 +490,22 @@ export const CaseFile: FC<A2uiNodeViewProps> = ({ node }) => {
       )}
 
       {docket && view.status === 'demand_issued' ? <ClaimantSettlementPanel docket={docket} /> : null}
+
+      {docket && record ? (
+        <div className="mt-8 border-t border-border pt-6">
+          <button
+            type="button"
+            onClick={() => dispatch?.('faceOpposition', { docket, hearingPacket })}
+            className="flex w-full items-center justify-center gap-2 border border-primary px-5 py-3 font-mono text-body-sm uppercase tracking-caps text-primary transition duration-150 hover:bg-primary hover:text-primary-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-primary active:scale-[0.98]"
+          >
+            <Swords className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+            {intl.formatMessage(messages.faceOpposition)}
+          </button>
+          <p className="mt-3 max-w-[62ch] font-mono text-body-xs leading-relaxed text-muted-foreground-subtle">
+            {intl.formatMessage(messages.faceOppositionNote)}
+          </p>
+        </div>
+      ) : null}
 
       {docket ? null : (
         <div className="mt-8 border-t border-border pt-6">

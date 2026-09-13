@@ -5,6 +5,7 @@ import type { AgentStorageFactoryService } from '../../../services/agent-storage
 import { createGeneralPurposeSubagent } from './general-purpose-subagent.ts';
 import { createCodeExecutorSubagent } from './code-executor-subagent.ts';
 import { createPageFetcherSubagent } from './page-fetcher-subagent.ts';
+import { createRespondentCounselSubagent } from './respondent-counsel-subagent.ts';
 import { SUBAGENT_DEFAULT_MODEL, type SubagentModelResolver } from './subagent-model-resolver.ts';
 
 /**
@@ -24,12 +25,11 @@ import { SUBAGENT_DEFAULT_MODEL, type SubagentModelResolver } from './subagent-m
  *       (A) `inheritToolsFromParent(parent)` — parent minus UI/Subagent
  *       (B) `inheritToolsFromParent(parent, { includeOnlyNames: [...] })`
  *           for a whitelist, or `{ excludeNames: [...] }` to drop a few
- *           tools while keeping everything else the parent has
  *       (C) `new ToolRegistry([new MyTool(), ...])` — a fully custom set
  *   - `model`: LanguageModelV3 used when the tool schema exposes no `model`
  *     param; with a resolver wired the schema's SUBAGENT_DEFAULT_MODEL wins
  *   - `maxModelCalls`: runaway guard (30 is a reasonable default)
- *   - `traceName`: optional Langfuse trace label — use `\`<Name>: ${agentId}\``
+ *   - `traceName`: optional Langfuse trace label — use `<Name>: ${agentId}`
  *     so traces are grouped by subagent kind and agent in the dashboard
  */
 export async function createAgentSubagents(args: {
@@ -60,6 +60,11 @@ export async function createAgentSubagents(args: {
       parentRegistry: args.parentRegistry,
       defaultModel: platformDefault?.model ?? args.defaultModel,
       modelSelectable: Boolean(resolver),
+      agentId: args.agentId,
+    }),
+    // The evidence-only counsel is always available: it has no tools or optional provider dependency.
+    createRespondentCounselSubagent({
+      defaultModel: platformDefault?.model ?? args.defaultModel,
       agentId: args.agentId,
     }),
   ];

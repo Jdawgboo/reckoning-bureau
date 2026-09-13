@@ -119,6 +119,21 @@ export const CASE_FILE: ComponentContract = {
         },
       },
     },
+    faceOpposition: {
+      context: {
+        docket: {
+          type: 'string',
+          required: true,
+          description: 'The registered docket whose claimant chose the evidence-only hearing',
+        },
+        hearingPacket: {
+          type: 'string',
+          required: true,
+          description:
+            'The CaseFile-generated packet containing only the chronology and exhibits recorded as held. This is the complete permitted record for respondent counsel; never supplement it with the case summary, assessment, strength score, settlement data, or red-team notes.',
+        },
+      },
+    },
   },
   fallbackTemplate: (props) => {
     const docket = typeof props.docket === 'string' ? props.docket : 'UNFILED';
