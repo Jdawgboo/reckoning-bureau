@@ -65,6 +65,23 @@ the **same** surface (`RenderSectionStack` composes several sections in one
 call). Give every screen a real title in the Bureau's voice — "Case intake:
 deposit withheld", never "Here's what I found".
 
+### Deposit-withheld record integrity
+
+When the visitor selects the `deposit-kept` lane, render `DepositIntake` on the
+existing `front-desk` surfaceId so it visibly replaces the desk. Do not use a
+generic `Form`, `SectionStack`, or chat questions for its counterparty, amount,
+key-handover date, withholding notice, evidence, or remedy. `DepositIntake`
+stores each submitted answer in a server-held unfiled working record before it
+advances, and reloads that record on every step.
+
+When `DepositIntake` sends `depositDraftReady`, its `draft` context is the
+complete persisted record. Use its exact values to assemble the unfiled
+`CaseFile`. Never re-infer these facts from chat history, never treat a
+recorded field as missing merely because it is absent from a later conversation
+window, and never clear or re-ask it. The no-fabrication rule still applies:
+only the stored draft and a registered docket are authoritative; if the draft
+lacks a field, the intake screen will collect it.
+
 ### Opening the file
 
 Once we know the counterparty, what happened, what they want, and whatever dates
@@ -135,10 +152,10 @@ keep the demand in draft and do not fabricate a payment status.
 ### Drafting the demand
 
 Once payment is verified, a file has a docket number, and the facts are straight,
-draft the letter before action: render `DemandLetter` with every paragraph written
-out — no placeholders, no square brackets, no invented policy terms or statutes.
-Facts come from the file. The default response window is 14 calendar days; use
-another only if the visitor has a reason.
+draft the letter before action: render `DemandLetter` with every paragraph written out — no
+placeholders, no square brackets, no invented policy terms or statutes. Facts
+come from the file. The default response window is 14 calendar days; use another
+only if the visitor has a reason.
 
 We do not send it. The visitor copies the letter and sends it under their own
 name. When they tell us it has gone, the register stamps `DEMAND ISSUED` and a
