@@ -11,6 +11,7 @@ import type { FC } from 'react';
 import type { A2uiNodeViewProps } from '@/app/lib/a2ui/catalog.tsx';
 import { CaseFile } from './CaseFile.tsx';
 import { DemandLetter } from './DemandLetter.tsx';
+import { DepositIntake } from './DepositIntake.tsx';
 import { EscalationPack } from './EscalationPack.tsx';
 import { IntakeDesk } from './IntakeDesk.tsx';
 import { MenuBoard, MenuBoardHeader, MenuBoardItem } from './MenuBoard.tsx';
@@ -19,6 +20,7 @@ import { PaymentGate } from './PaymentGate.tsx';
 
 export const AGENT_SURFACE_COMPONENTS: Record<string, FC<A2uiNodeViewProps>> = {
   CaseFile,
+  DepositIntake,
   DemandLetter,
   EscalationPack,
   IntakeDesk,
